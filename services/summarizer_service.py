@@ -8,7 +8,8 @@ client = AzureOpenAI(api_key=OPENAI_API_KEY, azure_endpoint=AZURE_ENDPOINT, api_
 def generate_summary(text):
     prompt = f"""
 You are an expert QA engineer.
-Summarize the following content in a structured, detailed way.
+Summarize the following content in a structured, detailed way.Summarize the following content clearly and concisely.
+Focus on reusable technical knowledge.
 Focus on:
 - Functional behavior
 - Edge cases

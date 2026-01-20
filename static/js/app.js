@@ -163,7 +163,6 @@ fetch("/metadata")
     .then(data => populateKeywords(data))
     .catch(error => {
         console.error("Error fetching metadata:", error);
-        // Fallback to empty state if fetch fails
         populateKeywords({});
     });
 
@@ -191,11 +190,16 @@ function generate() {
 }
 
 function showIngest() {
-    document.getElementById("ingestSection").style.display = "block";
+    var x = document.getElementById("ingestSection");
+    
+    if (x.style.display === "none" || x.style.display === "") {
+        x.style.display = "block";
+    } else {
+        x.style.display = "none";
+    }
 }
 
 function ingest() {
-    // Allow comma-separated keywords/subcategories in ingest fields
     const keyword = document.getElementById("newKeyword").value
         .split(",")
         .map(s => s.trim())
@@ -224,4 +228,42 @@ function ingest() {
         alert("Knowledge stored (mock): " + data.status);
     });
 }
+
+function exportTestCases() {
+    const query = document.getElementById("query").value;
+
+    const keywords = getSelectedKeywords();        
+    const subcategories = getSelectedSubcategories(); 
+
+    if (!query || query.trim() === "") {
+        alert("Please enter a query before exporting test cases.");
+        return;
+    }
+
+    fetch("/export", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            query: query,
+            keywords: keywords,
+            subcategories: subcategories
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.file) {
+            // Trigger file download
+            window.location.href = `/download?file=${encodeURIComponent(data.file)}`;
+        } else {
+            alert("Export failed. No file returned.");
+        }
+    })
+    .catch(error => {
+        console.error("Export error:", error);
+        alert("An error occurred while exporting test cases.");
+    });
+}
+
 

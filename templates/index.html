@@ -42,7 +42,7 @@
 
             <div class="button-row">
                 <button class="btn btn-primary" onclick="generate()">Generate</button>
-
+                <button class="btn btn-outline-primary" onclick="exportTestCases()">Export Test Cases</button>
                 <div class="ingest-toggle">
                     Didn’t find a relevant keyword?
                     <button class="btn btn-ghost" type="button" onclick="showIngest()">Add Knowledge</button>
@@ -66,6 +66,8 @@
 
                 <div class="form-field" style="margin-top: 6px;">
                     <label for="newContent">Content (paste text)</label>
+                    <label>Upload PDF / TXT (optional)</label>
+                    <input type="file" id="knowledgeFile" name="file" accept=".pdf,.txt">
                     <textarea id="newContent"
                               placeholder="Paste documentation, requirements, or reference material here..."></textarea>
                 </div>

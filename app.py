@@ -6,6 +6,8 @@ from services.promt_builder import build_testcase_prompt
 from services.testcase_generator import generate_testcases
 from services.export_prompt_builder import build_export_testcase_prompt
 from services.exporter import export_to_excel
+from flask import send_file
+
 
 app = Flask(__name__)
 
@@ -107,6 +109,13 @@ def export():
 def metadata():
     data = fetch_keywords_and_subcategories()
     return jsonify(data)
+
+
+@app.route("/download", methods=["GET"])
+def download():
+    file_path = request.args.get("file")
+    return send_file(file_path, as_attachment=True)
+
 
 if __name__ == "__main__":
     print(app.url_map)
