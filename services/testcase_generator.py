@@ -5,27 +5,14 @@ from config.config import API_VERSION
 
 client = AzureOpenAI(api_key=OPENAI_API_KEY, azure_endpoint=AZURE_ENDPOINT, api_version=API_VERSION)
 
-def generate_summary(text):
-    prompt = f"""
-You are an expert QA engineer.
-Summarize the following content in a structured, detailed way.
-Focus on:
-- Functional behavior
-- Edge cases
-- Constraints
-- Inputs and outputs
-
-Content:
-{text}
-"""
-
+def generate_testcases(prompt):
     response = client.chat.completions.create(
         model="gpt-4.1",
         messages=[
-            {"role": "system", "content": "You summarize product documentation."},
+            {"role": "system", "content": "You generate high-quality QA test cases."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.2
+        temperature=0.3
     )
 
     return response.choices[0].message.content

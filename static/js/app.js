@@ -1,7 +1,4 @@
-const subcategoryMap = {
-    authentication: ["Login", "Signup", "Password Reset"],
-    payments: ["UPI", "Credit Card", "Refunds"]
-};
+let subcategoryMap = {};
 
 function getSelectedValues(selectEl) {
     return Array.from(selectEl.selectedOptions).map(o => o.value).filter(Boolean);
@@ -23,7 +20,10 @@ function renderSubcategoriesForKeywords(selectedKeywords) {
 
     const merged = new Set();
     selectedKeywords.forEach(k => {
-        (subcategoryMap[k] || []).forEach(sub => merged.add(sub));
+        // Handle both normalized (lowercase) and original case keys
+        const normalizedKey = k.toLowerCase();
+        const subcategories = subcategoryMap[normalizedKey] || subcategoryMap[k] || [];
+        subcategories.forEach(sub => merged.add(sub));
     });
 
     Array.from(merged).sort().forEach(sub => {
@@ -123,11 +123,28 @@ document.getElementById("subcategory").addEventListener("change", function () {
     syncSubcategoryUI();
 });
 
-// Initial render
-(function initMultiSelects() {
-    const keywordSelect = document.getElementById("keyword");
-    const subcategorySelect = document.getElementById("subcategory");
+function populateKeywords(data) {
+    // Update subcategoryMap with fetched data
+    subcategoryMap = {};
+    Object.keys(data).forEach(keyword => {
+        // Normalize keyword to lowercase for consistency
+        const normalizedKey = keyword.toLowerCase();
+        subcategoryMap[normalizedKey] = data[keyword];
+    });
 
+    // Populate keyword select dropdown
+    const keywordSelect = document.getElementById("keyword");
+    keywordSelect.innerHTML = "";
+    
+    Object.keys(data).forEach(keyword => {
+        const option = document.createElement("option");
+        option.value = keyword.toLowerCase();
+        option.text = keyword;
+        keywordSelect.appendChild(option);
+    });
+
+    // Initialize UI with fetched data
+    const subcategorySelect = document.getElementById("subcategory");
     renderSubcategoriesForKeywords(getSelectedValues(keywordSelect));
     syncKeywordUI();
     syncSubcategoryUI();
@@ -138,7 +155,17 @@ document.getElementById("subcategory").addEventListener("change", function () {
     }
     // If still no subcategories (e.g. map empty), just render UI
     if (subcategorySelect.options.length === 0) syncSubcategoryUI();
-})();
+}
+
+// Fetch metadata on page load
+fetch("/metadata")
+    .then(res => res.json())
+    .then(data => populateKeywords(data))
+    .catch(error => {
+        console.error("Error fetching metadata:", error);
+        // Fallback to empty state if fetch fails
+        populateKeywords({});
+    });
 
 function generate() {
     const keyword = getSelectedValues(document.getElementById("keyword"));
