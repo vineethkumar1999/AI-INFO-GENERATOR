@@ -15,6 +15,9 @@ db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
 def save_summary(keyword, subcategory, summary):
+    keyword = keyword.lower().strip()
+    subcategory = subcategory.lower().strip()
+
     logger.info(f"Saving summary for [{keyword} :: {subcategory}]")
 
     collection.update_one(
@@ -34,17 +37,38 @@ def save_summary(keyword, subcategory, summary):
     )
 
 def fetch_summaries(keywords, subcategories):
-    logger.info(f"Fetching summaries for keywords={keywords}, subcategories={subcategories}")
+    logger.info(f"fetch_summaries called")
+    logger.info(f"Keywords received: {keywords}")
+    logger.info(f"Subcategories received: {subcategories}")
 
-    cursor = collection.find({
+    if not keywords or not subcategories:
+        logger.warning("Empty keywords or subcategories list")
+        return []
+
+    # Normalize to lowercase for matching
+    keywords = [k.lower() for k in keywords]
+    subcategories = [s.lower() for s in subcategories]
+
+    query = {
         "keyword": {"$in": keywords},
         "subcategory": {"$in": subcategories}
-    })
+    }
+
+    logger.info(f"Mongo query: {query}")
+
+    cursor = collection.find(query)
 
     summaries = []
+
     for doc in cursor:
+        logger.info(
+            f"Matched doc: keyword={doc.get('keyword')}, "
+            f"subcategory={doc.get('subcategory')}"
+        )
         for s in doc.get("summaries", []):
-            summaries.append(s["summary"])
+            summaries.append(s.get("summary"))
+
+    logger.info(f"Total summaries fetched: {len(summaries)}")
 
     return summaries
 
