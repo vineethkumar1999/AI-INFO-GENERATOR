@@ -41,23 +41,26 @@ def generate():
         "message": "This will later go through summarizer + GPT"
     })
 
+
 @app.route("/ingest", methods=["POST"])
 def ingest():
-    data = request.json
+    # FormData → use request.form / request.files
+    keyword = request.form.get("keyword")
+    subcategory = request.form.get("subcategory")
+    text = request.form.get("text")
 
-    text = data.get("text")
-    keywords = data.get("keywords", [])
-    subcategories = data.get("subcategories", [])
+    if not keyword or not subcategory:
+        return jsonify({"error": "Keyword and subcategory are required"}), 400
 
     if not text:
-        return jsonify({"error": "No text provided"}), 400
+        return jsonify({"error": "No content provided"}), 400
 
     summary = generate_summary(text)
 
     save_summary(
         summary=summary,
-        keywords=keywords,
-        subcategories=subcategories,
+        keywords=[keyword],          # Mongo still stores as list
+        subcategories=[subcategory],
         raw_text=text
     )
 

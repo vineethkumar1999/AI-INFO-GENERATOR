@@ -14,7 +14,22 @@ def save_summary(summary, keywords, subcategories, raw_text):
         "raw_text": raw_text,
         "created_at": datetime.utcnow()
     }
-    collection.insert_one(document)
+    collection.update_one(
+        {
+            "keyword": keyword,
+            "subcategory": subcategory
+        },
+        {
+            "$push": {
+                "summaries": {
+                    "summary": summary,
+                    "raw_text": raw_text,
+                    "created_at": datetime.utcnow()
+                }
+            }
+        },
+        upsert=True  
+    )
 
 
 def fetch_summaries(keywords, subcategories):
@@ -27,7 +42,8 @@ def fetch_summaries(keywords, subcategories):
 
     summaries = []
     for doc in documents:
-        summaries.append(doc["summary"])
+         for s in doc["summaries"]:
+            summaries.append(doc["summary"])
 
     return summaries
 

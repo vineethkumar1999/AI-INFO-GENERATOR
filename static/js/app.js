@@ -200,34 +200,45 @@ function showIngest() {
 }
 
 function ingest() {
-    const keyword = document.getElementById("newKeyword").value
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
+    const keyword = document.getElementById("newKeyword").value.trim();
+    const subcategory = document.getElementById("newSubcategory").value.trim();
+    const text = document.getElementById("newContent").value.trim();
+    const fileInput = document.getElementById("knowledgeFile");
 
-    const subcategory = document.getElementById("newSubcategory").value
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean);
+    if (!keyword || !subcategory) {
+        alert("Keyword and Subcategory are required");
+        return;
+    }
 
-    const content = document.getElementById("newContent").value;
+    if (!text && fileInput.files.length === 0) {
+        alert("Please provide text or upload a file");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("keyword", keyword);
+    formData.append("subcategory", subcategory);
+    formData.append("text", text);
+
+    // File ready (future use)
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+    }
 
     fetch("/ingest", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            keyword,
-            subcategory,
-            content
-        })
+        body: formData
     })
     .then(res => res.json())
     .then(data => {
-        alert("Knowledge stored (mock): " + data.status);
+        alert(data.status || data.error);
+    })
+    .catch(err => {
+        console.error("Ingest error:", err);
+        alert("Failed to ingest knowledge");
     });
 }
+
 
 function exportTestCases() {
     const query = document.getElementById("query").value;
