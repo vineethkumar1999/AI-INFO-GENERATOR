@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generator Tool</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="title">Information Generator</div>
+                    <div class="subtitle">Describe what you’re looking for and we’ll help generate it.</div>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <!-- Keyword selection -->
+                <div class="form-field">
+                    <label for="keyword">Keyword</label>
+                    <div id="keywordMulti" class="multi-select" aria-label="Keyword selection"></div>
+                    <select id="keyword" class="native-multi-select" multiple size="5">
+                        <option value="authentication">Authentication</option>
+                        <option value="payments">Payments</option>
+                    </select>
+                </div>
+
+                <!-- Subcategory selection -->
+                <div class="form-field">
+                    <label for="subcategory">Subcategory</label>
+                    <div id="subcategoryMulti" class="multi-select" aria-label="Subcategory selection"></div>
+                    <select id="subcategory" class="native-multi-select" multiple size="5"></select>
+                </div>
+            </div>
+
+            <!-- User query -->
+            <div class="form-field" style="margin-bottom: 10px;">
+                <label for="query">What do you want to generate information for?</label>
+                <textarea id="query"
+                          placeholder="Describe the feature, scenario, behavior you’d like get informationfor..."></textarea>
+            </div>
+
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="generate()">Generate</button>
+
+                <div class="ingest-toggle">
+                    Didn’t find a relevant keyword?
+                    <button class="btn btn-ghost" type="button" onclick="showIngest()">Add Knowledge</button>
+                </div>
+            </div>
+
+            <div id="ingestSection" class="ingest-card" style="display:none;">
+                <div class="ingest-title">Add New Knowledge</div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="newKeyword">Keyword</label>
+                        <input id="newKeyword" type="text" placeholder="e.g. authentication">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="newSubcategory">Subcategory</label>
+                        <input id="newSubcategory" type="text" placeholder="e.g. OAuth login">
+                    </div>
+                </div>
+
+                <div class="form-field" style="margin-top: 6px;">
+                    <label for="newContent">Content (paste text)</label>
+                    <textarea id="newContent"
+                              placeholder="Paste documentation, requirements, or reference material here..."></textarea>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary" type="button" onclick="ingest()">Save Knowledge</button>
+                </div>
+            </div>
+
+            <div class="response-block">
+                <div class="response-label">Response</div>
+                <pre id="response"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
