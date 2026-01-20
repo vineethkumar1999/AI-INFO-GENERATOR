@@ -30,19 +30,49 @@ def home():
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    data = request.json
+    try:
+        data = request.json
 
-    keywords = _as_list(data.get("keyword"))
-    subcategories = _as_list(data.get("subcategory"))
-    query = data.get("query")
+        keywords = _as_list(data.get("keyword"))
+        subcategories = _as_list(data.get("subcategory"))
+        user_query = data.get("query")
 
-    return jsonify({
-        "status": "received",
-        "keyword": keywords,
-        "subcategory": subcategories,
-        "query": query,
-        "message": "This will later go through summarizer + GPT"
-    })
+        app.logger.info(
+            f"Generate called | keywords={keywords} | subcategories={subcategories}"
+        )
+
+        if not user_query:
+            return jsonify({"error": "Query is required"}), 400
+
+        # 1. Fetch summaries from MongoDB
+        summaries = fetch_summaries(keywords, subcategories)
+
+        if not summaries:
+            return jsonify({
+                "error": "No knowledge found for selected keywords/subcategories"
+            }), 404
+
+        app.logger.info(f"Fetched {len(summaries)} summaries")
+
+        # 2. Build normal (non-testcase) prompt
+        prompt = build_testcase_prompt(
+            summaries=summaries,
+            user_query=user_query
+        )
+
+
+        response = generate_summary(prompt)
+
+        app.logger.info("Normal GPT response generated")
+
+        return jsonify({
+            "response": response
+        })
+
+    except Exception as e:
+        app.logger.exception("Generate failed")
+        return jsonify({"error": str(e)}), 500
+
 
 
 @app.route("/ingest", methods=["POST"])
