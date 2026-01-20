@@ -202,40 +202,35 @@ function showIngest() {
 function ingest() {
     const keyword = document.getElementById("newKeyword").value.trim();
     const subcategory = document.getElementById("newSubcategory").value.trim();
-    const text = document.getElementById("newContent").value.trim();
-    const fileInput = document.getElementById("knowledgeFile");
+    const content = document.getElementById("newContent").value.trim();
 
-    if (!keyword || !subcategory) {
-        alert("Keyword and Subcategory are required");
+    if (!keyword || !subcategory || !content) {
+        showDialog("Validation Error", "All fields are required", true);
         return;
-    }
-
-    if (!text && fileInput.files.length === 0) {
-        alert("Please provide text or upload a file");
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("keyword", keyword);
-    formData.append("subcategory", subcategory);
-    formData.append("text", text);
-
-    // File ready (future use)
-    if (fileInput.files.length > 0) {
-        formData.append("file", fileInput.files[0]);
     }
 
     fetch("/ingest", {
         method: "POST",
-        body: formData
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            keyword: keyword,
+            subcategory: subcategory,
+            content: content
+        })
     })
     .then(res => res.json())
     .then(data => {
-        alert(data.status || data.error);
+        if (data.error) {
+            showDialog("Ingest Failed", data.error, true);
+        } else {
+            showDialog("Success", data.status);
+        }
     })
     .catch(err => {
         console.error("Ingest error:", err);
-        alert("Failed to ingest knowledge");
+        showDialog("Error", "Unexpected error occurred", true);
     });
 }
 
