@@ -6,14 +6,17 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-def save_summary(summary, keywords, subcategories, raw_text):
-    document = {
-        "summary": summary,
-        "keywords": keywords,
-        "subcategories": subcategories,
-        "raw_text": raw_text,
-        "created_at": datetime.utcnow()
-    }
+import logging
+
+logger = logging.getLogger(__name__)
+
+client = MongoClient(MONGO_URI)
+db = client[DB_NAME]
+collection = db[COLLECTION_NAME]
+
+def save_summary(keyword, subcategory, summary):
+    logger.info(f"Saving summary for [{keyword} :: {subcategory}]")
+
     collection.update_one(
         {
             "keyword": keyword,
@@ -23,47 +26,37 @@ def save_summary(summary, keywords, subcategories, raw_text):
             "$push": {
                 "summaries": {
                     "summary": summary,
-                    "raw_text": raw_text,
                     "created_at": datetime.utcnow()
                 }
             }
         },
-        upsert=True  
+        upsert=True
     )
 
-
 def fetch_summaries(keywords, subcategories):
-    query = {
-        "keywords": {"$in": keywords},
-        "subcategories": {"$in": subcategories}
-    }
+    logger.info(f"Fetching summaries for keywords={keywords}, subcategories={subcategories}")
 
-    documents = collection.find(query)
+    cursor = collection.find({
+        "keyword": {"$in": keywords},
+        "subcategory": {"$in": subcategories}
+    })
 
     summaries = []
-    for doc in documents:
-         for s in doc["summaries"]:
-            summaries.append(doc["summary"])
+    for doc in cursor:
+        for s in doc.get("summaries", []):
+            summaries.append(s["summary"])
 
     return summaries
 
-
 def fetch_keywords_and_subcategories():
-    documents = collection.find({}, {"keywords": 1, "subcategories": 1})
+    cursor = collection.find({}, {"keyword": 1, "subcategory": 1})
 
-    keyword_map = {}
+    mapping = {}
+    for doc in cursor:
+        k = doc["keyword"]
+        s = doc["subcategory"]
+        mapping.setdefault(k, set()).add(s)
 
-    for doc in documents:
-        for kw in doc.get("keywords", []):
-            if kw not in keyword_map:
-                keyword_map[kw] = set()
-
-            for sub in doc.get("subcategories", []):
-                keyword_map[kw].add(sub)
-
-    # Convert sets to lists for JSON
-    return {
-        k: list(v) for k, v in keyword_map.items()
-    }
+    return {k: list(v) for k, v in mapping.items()}
 
 

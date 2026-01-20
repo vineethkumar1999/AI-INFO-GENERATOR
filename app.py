@@ -7,6 +7,9 @@ from services.testcase_generator import generate_testcases
 from services.export_prompt_builder import build_export_testcase_prompt
 from services.exporter import export_to_excel
 from flask import send_file
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 app = Flask(__name__)
@@ -44,27 +47,30 @@ def generate():
 
 @app.route("/ingest", methods=["POST"])
 def ingest():
-    # FormData → use request.form / request.files
-    keyword = request.form.get("keyword")
-    subcategory = request.form.get("subcategory")
-    text = request.form.get("text")
+    try:
+        data = request.json
+        keyword = data.get("keyword")
+        subcategory = data.get("subcategory")
+        text = data.get("content")
 
-    if not keyword or not subcategory:
-        return jsonify({"error": "Keyword and subcategory are required"}), 400
+        app.logger.info(f"Ingest called for [{keyword} :: {subcategory}]")
 
-    if not text:
-        return jsonify({"error": "No content provided"}), 400
+        if not keyword or not subcategory or not text:
+            app.logger.warning("Ingest failed due to missing fields")
+            return jsonify({"error": "Keyword, subcategory and content are required"}), 400
 
-    summary = generate_summary(text)
+        summary = generate_summary(text)
+        app.logger.info("Summary generated successfully")
 
-    save_summary(
-        summary=summary,
-        keywords=[keyword],          # Mongo still stores as list
-        subcategories=[subcategory],
-        raw_text=text
-    )
+        save_summary(keyword, subcategory, summary)
+        app.logger.info("Summary saved to MongoDB")
 
-    return jsonify({"status": "Knowledge stored successfully"})
+        return jsonify({"status": "Knowledge stored successfully"})
+
+    except Exception as e:
+        app.logger.exception("Error during ingest")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route("/query", methods=["POST"])
 def query():

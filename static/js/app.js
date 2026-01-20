@@ -277,4 +277,18 @@ function exportTestCases() {
     });
 }
 
+function showDialog(title, message, isError = false) {
+    const dialog = document.createElement("div");
+    dialog.className = "dialog-overlay";
+    dialog.innerHTML = `
+        <div class="dialog ${isError ? "error" : ""}">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <button onclick="this.closest('.dialog-overlay').remove()">OK</button>
+        </div>
+    `;
+    document.body.appendChild(dialog);
+}
+
+
 
