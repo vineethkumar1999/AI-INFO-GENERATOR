@@ -14,7 +14,7 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-def save_summary(keyword, subcategory, summary):
+def save_summary(keyword, subcategory, summary,added_by):
     keyword = keyword.lower().strip()
     subcategory = subcategory.lower().strip()
 
@@ -29,6 +29,7 @@ def save_summary(keyword, subcategory, summary):
             "$push": {
                 "summaries": {
                     "summary": summary,
+                    "added_by": added_by,
                     "created_at": datetime.utcnow()
                 }
             }

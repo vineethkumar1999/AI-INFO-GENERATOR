@@ -14,12 +14,13 @@
                     <div class="title">Information Generator</div>
                     <div class="subtitle">Describe what you’re looking for and we’ll help generate it.</div>
                 </div>
+                <button class="btn-icon" onclick="showHelp()" aria-label="Help">i</button>
             </div>
 
             <div class="form-grid">
                 <!-- Keyword selection -->
                 <div class="form-field">
-                    <label for="keyword">Keyword</label>
+                    <label for="keyword" data-tooltip="Select broad topics related to your query">Keyword</label>
                     <div id="keywordMulti" class="multi-select" aria-label="Keyword selection"></div>
                     <select id="keyword" class="native-multi-select" multiple size="5">
                     </select>
@@ -27,7 +28,7 @@
 
                 <!-- Subcategory selection -->
                 <div class="form-field">
-                    <label for="subcategory">Subcategory</label>
+                    <label for="subcategory" data-tooltip="Select specific domains within the chosen keywords">Subcategory</label>
                     <div id="subcategoryMulti" class="multi-select" aria-label="Subcategory selection"></div>
                     <select id="subcategory" class="native-multi-select" multiple size="5"></select>
                 </div>
@@ -35,45 +36,49 @@
 
             <!-- User query -->
             <div class="form-field" style="margin-bottom: 10px;">
-                <label for="query">What do you want to generate information for?</label>
+                <label for="query" data-tooltip="Describe the specific scenario or information you need">What do you want to generate information for?</label>
                 <textarea id="query"
                           placeholder="Describe the feature, scenario, behavior you’d like get informationfor..."></textarea>
             </div>
 
             <div class="button-row">
-                <button class="btn btn-primary" onclick="generate()">Generate</button>
-                <button class="btn btn-outline-primary" onclick="exportTestCases()">Export Test Cases</button>
+                <button class="btn btn-primary" onclick="generate()" data-tooltip="Generate a summary based on your query">Generate</button>
+                <button class="btn btn-outline-primary" onclick="exportTestCases()" data-tooltip="Download generated test cases as an Excel file">Export Test Cases</button>
                 <div class="ingest-toggle">
                     Didn’t find a relevant keyword?
-                    <button class="btn btn-ghost" type="button" onclick="showIngest()">Add Knowledge</button>
+                    <button class="btn btn-ghost" type="button" onclick="showIngest()" data-tooltip="Add custom knowledge to the system">Add Knowledge</button>
                 </div>
             </div>
 
-            <div id="ingestSection" class="ingest-card" style="display:none;">
-                <div class="ingest-title">Add New Knowledge</div>
+            <div id="ingestSection" class="ingest-section">
+                <div class="ingest-content">
+                    <div class="ingest-title">Add New Knowledge</div>
 
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="newKeyword">Keyword</label>
-                        <input id="newKeyword" type="text" placeholder="e.g. authentication">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="newKeyword">Keyword</label>
+                            <input id="newKeyword" type="text" placeholder="e.g. authentication">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="newSubcategory">Subcategory</label>
+                            <input id="newSubcategory" type="text" placeholder="e.g. OAuth login">
+                        </div>
                     </div>
 
-                    <div class="form-field">
-                        <label for="newSubcategory">Subcategory</label>
-                        <input id="newSubcategory" type="text" placeholder="e.g. OAuth login">
+                    <div class="form-field" style="margin-top: 6px;">
+                        <label for="newContent">Content (paste text)</label>
+                        <div class="file-upload-wrapper">
+                             <label for="knowledgeFile" class="file-upload-label">Upload PDF / TXT (optional)</label>
+                             <input type="file" id="knowledgeFile" name="file" accept=".pdf,.txt">
+                        </div>
+                        <textarea id="newContent"
+                                  placeholder="Paste documentation, requirements, or reference material here..."></textarea>
                     </div>
-                </div>
 
-                <div class="form-field" style="margin-top: 6px;">
-                    <label for="newContent">Content (paste text)</label>
-                    <label>Upload PDF / TXT (optional)</label>
-                    <input type="file" id="knowledgeFile" name="file" accept=".pdf,.txt">
-                    <textarea id="newContent"
-                              placeholder="Paste documentation, requirements, or reference material here..."></textarea>
-                </div>
-
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-primary" type="button" onclick="ingest()">Save Knowledge</button>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-primary" type="button" onclick="ingest()">Save Knowledge</button>
+                    </div>
                 </div>
             </div>
 
@@ -83,6 +88,43 @@
             </div>
         </div>
     </div>
+
+    <div class="dialog-overlay" id="helpModal">
+        <div class="dialog help-modal">
+            <div class="dialog-header">
+                <div class="dialog-title">How to use this application</div>
+                <button class="close-btn" onclick="closeHelp()" aria-label="Close help">×</button>
+            </div>
+            <div class="dialog-body">
+                <p>Welcome to the AI Info Generator! Here's how to use the available options:</p>
+                <ul style="padding-left: 20px; line-height: 1.6;">
+                    <li><strong>Keyword:</strong> Select one or more broad topics relevant to your query.</li>
+                    <li><strong>Subcategory:</strong> Refine your request by choosing specific sub-topics based on your selected keywords.</li>
+                    <li><strong>Query:</strong> Describe the specific scenario, feature, or information you need generated.</li>
+                    <li><strong>Knowledge Base:</strong> Add custom knowledge (text or file) if the existing keywords don't cover your needs.</li>
+                    <li><strong>Generate:</strong> Create the content based on your selected options and query.</li>
+                    <li><strong>Export Test Cases:</strong> Download the generated output as an Excel file.</li>
+                </ul>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" onclick="closeHelp()">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="dialog-overlay" style="display:none;">
+    <div class="dialog">
+        <h3>Authentication Required</h3>
+
+        <input id="loginUsername" placeholder="Username">
+        <input id="loginPassword" type="password" placeholder="Password">
+
+        <div class="button-row">
+            <button class="btn btn-primary" onclick="submitLogin()">Login</button>
+        </div>
+    </div>
+</div>
+
 
     <script src="/static/js/app.js"></script>
 </body>
