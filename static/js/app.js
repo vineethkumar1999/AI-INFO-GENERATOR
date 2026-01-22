@@ -1,4 +1,5 @@
 let subcategoryMap = {};
+let pendingIngestData = null;
 
 function getSelectedValues(selectEl) {
     return Array.from(selectEl.selectedOptions).map(o => o.value).filter(Boolean);
@@ -145,28 +146,41 @@ function showIngest() {
 }
 
 function ingest() {
-    const text = document.getElementById("knowledgeBase").value;
-    if (!text.trim()) {
-        showDialog("Error", "Knowledge base content is empty.", true);
+    const keyword = document.getElementById("newKeyword").value.trim();
+    const subcategory = document.getElementById("newSubcategory").value.trim();
+    const content = document.getElementById("newContent").value.trim();
+    const fileInput = document.getElementById("knowledgeFile");
+
+    if (!keyword || !subcategory) {
+        showDialog("Validation Error", "Keyword and Subcategory are required", true);
         return;
     }
 
-    fetch("/api/ingest", {
+    const formData = new FormData();
+    formData.append("keyword", keyword);
+    formData.append("subcategory", subcategory);
+    if (content) formData.append("text", content);
+    if (fileInput.files.length > 0) formData.append("file", fileInput.files[0]);
+
+    fetch("/ingest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text })
+        body: formData
     })
-    .then(r => r.json())
+    .then(res => {
+        if (res.status === 401) {
+            pendingIngestData = formData;
+            document.getElementById("loginModal").style.display = "flex";
+            throw new Error("Auth required");
+        }
+        return res.json();
+    })
     .then(data => {
-        showDialog("Success", "Knowledge base updated.");
-        // Reload keywords/subcategories to reflect new data
-        // For simplicity, just reload page or re-fetch.
-        // Let's re-fetch keywords logic if we want dynamic update, 
-        // but simple reload might be easier or just let user know.
+        showDialog("Success", data.status);
     })
     .catch(err => {
-        console.error(err);
-        showDialog("Error", "Failed to save knowledge.", true);
+        if (err.message !== "Auth required") {
+            showDialog("Error", "Ingest failed", true);
+        }
     });
 }
 
@@ -264,6 +278,34 @@ function showDialog(title, message, isError = false) {
     `;
     document.body.appendChild(dialog);
 }
+
+function submitLogin() {
+    const username = document.getElementById("loginUsername").value;
+    const password = document.getElementById("loginPassword").value;
+
+    fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showDialog("Login Failed", data.error, true);
+        } else {
+            document.getElementById("loginModal").style.display = "none";
+
+            // Retry original ingest
+            fetch("/ingest", {
+                method: "POST",
+                body: pendingIngestData
+            })
+            .then(res => res.json())
+            .then(data => showDialog("Success", data.status));
+        }
+    });
+}
+
 
 // Help Modal Functions
 function showHelp() {

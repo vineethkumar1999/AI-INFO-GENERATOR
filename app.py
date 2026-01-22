@@ -7,12 +7,17 @@ from services.testcase_generator import generate_testcases
 from services.export_prompt_builder import build_export_testcase_prompt
 from services.exporter import export_to_excel
 from flask import send_file
+from services.Auth_service import verify_user
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 
 
 app = Flask(__name__)
+
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
+
 
 def _as_list(value):
     if value is None:
@@ -78,6 +83,9 @@ def generate():
 @app.route("/ingest", methods=["POST"])
 def ingest():
     try:
+        if not session.get("authenticated"):
+            return jsonify({"error": "Not authenticated"}), 401
+        
         data = request.json
         keyword = data.get("keyword")
         subcategory = data.get("subcategory")
@@ -91,8 +99,11 @@ def ingest():
 
         summary = generate_summary(text)
         app.logger.info("Summary generated successfully")
+        added_by = session.get("username")
+        if not added_by:
+            return jsonify({"error": "User not authenticated"}), 401
 
-        save_summary(keyword, subcategory, summary)
+        save_summary(keyword, subcategory, summary, added_by)
         app.logger.info("Summary saved to MongoDB")
 
         return jsonify({"status": "Knowledge stored successfully"})
@@ -143,6 +154,24 @@ def export():
         "message": "Export successful",
         "file": file_path
     })
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    if verify_user(username, password):
+        session["authenticated"] = True
+        session["username"] = username
+        return jsonify({"status": "authenticated"})
+
+    return jsonify({"error": "Invalid credentials"}), 401
+
+
 
 @app.route("/metadata", methods=["GET"])
 def metadata():

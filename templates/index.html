@@ -112,6 +112,20 @@
         </div>
     </div>
 
+    <div id="loginModal" class="dialog-overlay" style="display:none;">
+    <div class="dialog">
+        <h3>Authentication Required</h3>
+
+        <input id="loginUsername" placeholder="Username">
+        <input id="loginPassword" type="password" placeholder="Password">
+
+        <div class="button-row">
+            <button class="btn btn-primary" onclick="submitLogin()">Login</button>
+        </div>
+    </div>
+</div>
+
+
     <script src="/static/js/app.js"></script>
 </body>
 </html>
